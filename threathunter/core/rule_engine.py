@@ -3,15 +3,34 @@
 
 import re
 import time
+import logging
 from collections import defaultdict
-from typing import List, Dict
+from typing import List, Dict, Any
+
+logger = logging.getLogger(__name__)
 
 class RuleEngine:
-    def __init__(self, rules: List[Dict]):
+    """
+    Evaluates log events against detection rules and generates alerts.
+    """
+    def __init__(self, rules: List[Dict[str, Any]]) -> None:
+        """
+        Initialize the RuleEngine.
+        Args:
+            rules (List[Dict[str, Any]]): List of detection rules.
+        """
         self.rules = rules
 
-    def evaluate(self, log_events: List[Dict]) -> List[Dict]:
-        alerts = []
+    def evaluate(self, log_events: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """
+        Evaluate log events against the loaded rules and generate alerts.
+        Args:
+            log_events (List[Dict[str, Any]]): List of parsed log events.
+        Returns:
+            List[Dict[str, Any]]: List of generated alerts.
+        """
+        alerts: List[Dict[str, Any]] = []
+        logger.info(f"Evaluating {len(log_events)} events against {len(self.rules)} rules.")
         for rule in self.rules:
             log_type = rule.get('log_type')
             matches = rule.get('match', [])
@@ -41,7 +60,7 @@ class RuleEngine:
                         buckets[key].append(e)
                     for key, events in buckets.items():
                         # Sort by timestamp (convert to epoch for comparison)
-                        def to_epoch(ts):
+                        def to_epoch(ts: str) -> float:
                             try:
                                 return time.mktime(time.strptime(ts, '%b %d %H:%M:%S'))
                             except Exception:
@@ -60,6 +79,7 @@ class RuleEngine:
                                     'events': events[i:i+count],
                                 }
                                 alerts.append(alert)
+                                logger.info(f"Alert triggered: {alert}")
                 else:
                     # Single event match
                     for e in matched_events:
@@ -72,4 +92,6 @@ class RuleEngine:
                             'event': e,
                         }
                         alerts.append(alert)
+                        logger.info(f"Alert triggered: {alert}")
+        logger.info(f"Total alerts generated: {len(alerts)}")
         return alerts 

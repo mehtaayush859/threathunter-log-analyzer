@@ -8,4 +8,5 @@ pytest
 bandit
 slack_sdk
 reportlab
-uvicorn 
+uvicorn
+weasyprint 

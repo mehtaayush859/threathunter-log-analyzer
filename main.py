@@ -1,11 +1,19 @@
 import argparse
 import json
 import yaml
+import logging
 from threathunter.core.log_parser import LogParser
 from threathunter.core.rule_engine import RuleEngine
 
 
-def main():
+def main() -> None:
+    """
+    Main CLI entrypoint for ThreatHunter log analyzer.
+    Parses logs, applies alert rules, and outputs alerts.
+    """
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger("threathunter.main")
+
     parser = argparse.ArgumentParser(description="ThreatHunter - Lightweight SIEM-like Log Analyzer")
     parser.add_argument('--config', type=str, default='config.yaml', help='Path to config file')
     parser.add_argument('--log', type=str, required=True, help='Path to log file (e.g., auth.log)')
@@ -14,32 +22,39 @@ def main():
     parser.add_argument('--alerts', type=str, default='threathunter/reports/alerts.json', help='Path to output alerts JSON')
     args = parser.parse_args()
 
-    print("[+] ThreatHunter starting...")
-    print(f"[+] Using config: {args.config}")
-    print(f"[+] Parsing log: {args.log} (type: {args.logtype})")
+    logger.info("ThreatHunter starting...")
+    logger.info(f"Using config: {args.config}")
+    logger.info(f"Parsing log: {args.log} (type: {args.logtype})")
 
     log_parser = LogParser(args.logtype)
     events = log_parser.parse(args.log)
-    print(f"[+] Parsed {len(events)} events.")
+    logger.info(f"Parsed {len(events)} events.")
 
     # Load rules
-    with open(args.rules, 'r', encoding='utf-8') as f:
-        rules = yaml.safe_load(f)
-    print(f"[+] Loaded {len(rules)} alert rules.")
+    try:
+        with open(args.rules, 'r', encoding='utf-8') as f:
+            rules = yaml.safe_load(f)
+        logger.info(f"Loaded {len(rules)} alert rules.")
+    except Exception as e:
+        logger.error(f"Failed to load rules: {e}")
+        return
 
     # Evaluate rules
     rule_engine = RuleEngine(rules)
     alerts = rule_engine.evaluate(events)
-    print(f"[+] Detected {len(alerts)} alerts.")
+    logger.info(f"Detected {len(alerts)} alerts.")
 
     # Output alerts to JSON
-    with open(args.alerts, 'w', encoding='utf-8') as f:
-        json.dump(alerts, f, indent=2)
-    print(f"[+] Alerts written to {args.alerts}")
+    try:
+        with open(args.alerts, 'w', encoding='utf-8') as f:
+            json.dump(alerts, f, indent=2)
+        logger.info(f"Alerts written to {args.alerts}")
+    except Exception as e:
+        logger.error(f"Failed to write alerts: {e}")
 
     # Print alert summary
     for alert in alerts:
-        print(f"[ALERT] {alert['timestamp']} | {alert['rule']} | User: {alert.get('user')} | IP: {alert.get('src_ip')} | Severity: {alert['severity']}")
+        logger.info(f"[ALERT] {alert['timestamp']} | {alert['rule']} | User: {alert.get('user')} | IP: {alert.get('src_ip')} | Severity: {alert['severity']}")
 
 if __name__ == "__main__":
     main() 
