@@ -1,0 +1,11 @@
+fastapi
+streamlit
+matplotlib
+seaborn
+pydantic
+pyyaml
+pytest
+bandit
+slack_sdk
+reportlab
+uvicorn 

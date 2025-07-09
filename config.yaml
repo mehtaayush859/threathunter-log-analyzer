@@ -1,0 +1,20 @@
+# ThreatHunter Configuration
+log_paths:
+  - data/sample_logs/auth.log
+  - data/sample_logs/access.log
+  # Add more log files as needed
+
+alerting:
+  enable_slack: false
+  slack_webhook_url: ""
+  enable_email: false
+  email_recipients: []
+
+storage:
+  type: "json"  # or "sqlite"
+  path: "data/processed/alerts.json"
+
+report:
+  output_dir: "reports/"
+  pdf: true
+  json: true 

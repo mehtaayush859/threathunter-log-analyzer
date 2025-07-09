@@ -1,0 +1,14 @@
+- name: Brute Force Login
+  log_type: auth
+  match:
+    - pattern: "Failed password for"
+      count: 5
+      timeframe: 120  # seconds
+  severity: High
+
+- name: Sudo Abuse
+  log_type: auth
+  match:
+    - pattern: "sudo"
+      user: "not root"
+  severity: Medium 
